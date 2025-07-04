@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="144" height="144">
+    <rect width="144" height="144" fill="#3B82F6"/>
+    <circle cx="72" cy="72" r="48" fill="white" opacity="0.9"/>
+    <text x="72" y="80" text-anchor="middle" fill="#3B82F6" font-family="Arial" font-size="18" font-weight="bold">FM</text>
+  </svg>

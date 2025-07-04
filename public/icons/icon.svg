@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#3B82F6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#6366F1;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background circle -->
+  <circle cx="256" cy="256" r="240" fill="url(#gradient)" stroke="#1E40AF" stroke-width="8"/>
+  
+  <!-- Calendar icon -->
+  <rect x="156" y="140" width="200" height="180" rx="20" fill="white" opacity="0.9"/>
+  <rect x="156" y="140" width="200" height="50" rx="20" fill="white"/>
+  <rect x="180" y="120" width="8" height="40" rx="4" fill="#374151"/>
+  <rect x="324" y="120" width="8" height="40" rx="4" fill="#374151"/>
+  
+  <!-- Calendar grid -->
+  <line x1="180" y1="210" x2="332" y2="210" stroke="#E5E7EB" stroke-width="2"/>
+  <line x1="180" y1="240" x2="332" y2="240" stroke="#E5E7EB" stroke-width="2"/>
+  <line x1="180" y1="270" x2="332" y2="270" stroke="#E5E7EB" stroke-width="2"/>
+  
+  <line x1="206" y1="190" x2="206" y2="300" stroke="#E5E7EB" stroke-width="2"/>
+  <line x1="232" y1="190" x2="232" y2="300" stroke="#E5E7EB" stroke-width="2"/>
+  <line x1="258" y1="190" x2="258" y2="300" stroke="#E5E7EB" stroke-width="2"/>
+  <line x1="284" y1="190" x2="284" y2="300" stroke="#E5E7EB" stroke-width="2"/>
+  <line x1="310" y1="190" x2="310" y2="300" stroke="#E5E7EB" stroke-width="2"/>
+  
+  <!-- Voice wave indicator -->
+  <circle cx="220" cy="225" r="3" fill="#3B82F6"/>
+  <circle cx="270" cy="255" r="3" fill="#3B82F6"/>
+  <circle cx="300" cy="285" r="3" fill="#3B82F6"/>
+  
+  <!-- Sparkle effect -->
+  <path d="M380,100 L385,110 L395,105 L385,115 L380,125 L375,115 L365,105 L375,110 Z" fill="white" opacity="0.8"/>
+  <path d="M420,160 L423,166 L429,163 L423,169 L420,175 L417,169 L411,163 L417,166 Z" fill="white" opacity="0.6"/>
+  <path d="M140,350 L143,356 L149,353 L143,359 L140,365 L137,359 L131,353 L137,356 Z" fill="white" opacity="0.7"/>
+</svg>
