@@ -47,8 +47,13 @@ import {
 import { 
   ChevronLeft, 
   ChevronRight, 
-  Zap
+  Zap,
+  X
 } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 // Calendar Event Component
 const CalendarEventComponent = ({ 
@@ -120,17 +125,17 @@ const DayView = ({
   };
   
   return (
-    <div className="flex flex-col h-full">
-      <div className="flex items-center justify-between p-4 border-b">
-        <h2 className="text-lg font-semibold">
-          {format(currentDate, 'EEEE, MMMM d, yyyy')}
-        </h2>
-        <div className="text-sm text-gray-500">
-          {dayEvents.length} events
+    <Card className="flex flex-col h-full">
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-lg">
+            {format(currentDate, 'EEEE, MMMM d, yyyy')}
+          </CardTitle>
+          <Badge variant="outline">{dayEvents.length} events</Badge>
         </div>
-      </div>
+      </CardHeader>
       
-      <div className="flex-1 overflow-y-auto">
+      <CardContent className="flex-1 overflow-y-auto p-0">
         <div className="relative">
           {hours.map(hour => (
             <div
@@ -160,8 +165,8 @@ const DayView = ({
             </div>
           ))}
         </div>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 };
 
@@ -184,12 +189,12 @@ const WeekView = ({
   const hours = Array.from({ length: 24 }, (_, i) => i);
   
   return (
-    <div className="flex flex-col h-full">
-      <div className="flex items-center justify-between p-4 border-b">
-        <h2 className="text-lg font-semibold">
+    <Card className="flex flex-col h-full">
+      <CardHeader>
+        <CardTitle className="text-lg">
           {format(weekStart, 'MMM d')} - {format(weekEnd, 'MMM d, yyyy')}
-        </h2>
-      </div>
+        </CardTitle>
+      </CardHeader>
       
       {/* Week header */}
       <div className="flex border-b">
@@ -210,7 +215,7 @@ const WeekView = ({
       </div>
       
       {/* Week grid */}
-      <div className="flex-1 overflow-y-auto">
+      <CardContent className="flex-1 overflow-y-auto p-0">
         <div className="relative">
           {hours.map(hour => (
             <div key={hour} className="flex border-b border-gray-100 h-15">
@@ -249,8 +254,8 @@ const WeekView = ({
             </div>
           ))}
         </div>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 };
 
@@ -283,12 +288,12 @@ const MonthView = ({
   };
   
   return (
-    <div className="flex flex-col h-full">
-      <div className="flex items-center justify-between p-4 border-b">
-        <h2 className="text-lg font-semibold">
+    <Card className="flex flex-col h-full">
+      <CardHeader>
+        <CardTitle className="text-lg">
           {format(currentDate, 'MMMM yyyy')}
-        </h2>
-      </div>
+        </CardTitle>
+      </CardHeader>
       
       {/* Month header */}
       <div className="flex border-b">
@@ -300,7 +305,7 @@ const MonthView = ({
       </div>
       
       {/* Month grid */}
-      <div className="flex-1">
+      <CardContent className="flex-1 p-0">
         {weeks.map((week, weekIndex) => (
           <div key={weekIndex} className="flex h-24">
             {week.map(day => {
@@ -348,8 +353,8 @@ const MonthView = ({
             })}
           </div>
         ))}
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 };
 
@@ -550,67 +555,74 @@ export const CalendarView = () => {
   };
   
   return (
-    <div className="flex flex-col h-full bg-gray-50">
+    <div className="flex flex-col h-full bg-gradient-to-br from-gray-50 via-white to-gray-50">
       {/* Header */}
-      <div className="bg-white border-b shadow-sm">
-        <div className="flex items-center justify-between px-6 py-4">
-          <div className="flex items-center space-x-4">
-            <h1 className="text-2xl font-bold text-gray-900">Calendar</h1>
-            
-            {/* Navigation */}
-            <div className="flex items-center space-x-2">
-              <button
-                onClick={() => handleNavigation('prev')}
-                className="p-2 rounded-lg hover:bg-gray-100"
-              >
-                <ChevronLeft className="w-5 h-5" />
-              </button>
-              <button
-                onClick={() => handleNavigation('next')}
-                className="p-2 rounded-lg hover:bg-gray-100"
-              >
-                <ChevronRight className="w-5 h-5" />
-              </button>
-              <button
-                onClick={() => setCurrentView(prev => ({ ...prev, currentDate: new Date() }))}
-                className="px-3 py-1 text-sm bg-gray-100 rounded-lg hover:bg-gray-200"
-              >
-                Today
-              </button>
-            </div>
-          </div>
-          
-          {/* Controls */}
-          <div className="flex items-center space-x-4">
-            {/* View Selector */}
-            <div className="flex bg-gray-100 rounded-lg p-1">
-              {CALENDAR_VIEWS.map(({ id, name }) => (
-                <button
-                  key={id}
-                  onClick={() => handleViewChange(id as CalendarViewType['type'])}
-                  className={`px-3 py-1 text-sm rounded-md ${
-                    currentView.type === id
-                      ? 'bg-white text-gray-900 shadow-sm'
-                      : 'text-gray-600 hover:text-gray-900'
-                  }`}
+      <Card className="border-0 shadow-lg rounded-none">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <CardTitle className="text-3xl font-bold text-gray-900">Calendar</CardTitle>
+              
+              {/* Navigation */}
+              <div className="flex items-center space-x-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleNavigation('prev')}
                 >
-                  {name}
-                </button>
-              ))}
+                  <ChevronLeft className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleNavigation('next')}
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentView(prev => ({ ...prev, currentDate: new Date() }))}
+                >
+                  Today
+                </Button>
+              </div>
             </div>
             
-            {/* Auto Schedule */}
-            <button
-              onClick={handleAutoSchedule}
-              disabled={isScheduling}
-              className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50"
-            >
-              <Zap className="w-4 h-4" />
-              <span>{isScheduling ? 'Scheduling...' : 'Auto Schedule'}</span>
-            </button>
+            {/* Controls */}
+            <div className="flex items-center space-x-4">
+              {/* View Selector */}
+              <div className="flex bg-gray-100 rounded-lg p-1">
+                {CALENDAR_VIEWS.map(({ id, name }) => (
+                  <Button
+                    key={id}
+                    variant={currentView.type === id ? "default" : "ghost"}
+                    size="sm"
+                    onClick={() => handleViewChange(id as CalendarViewType['type'])}
+                    className={`px-3 py-1 text-sm ${
+                      currentView.type === id
+                        ? 'bg-white text-gray-900 shadow-sm'
+                        : 'text-gray-600 hover:text-gray-900'
+                    }`}
+                  >
+                    {name}
+                  </Button>
+                ))}
+              </div>
+              
+              {/* Auto Schedule */}
+              <Button
+                onClick={handleAutoSchedule}
+                disabled={isScheduling}
+                className="gap-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700"
+              >
+                <Zap className="w-4 h-4" />
+                <span>{isScheduling ? 'Scheduling...' : 'Auto Schedule'}</span>
+              </Button>
+            </div>
           </div>
-        </div>
-      </div>
+        </CardHeader>
+      </Card>
       
       {/* Calendar Content */}
       <div className="flex-1 scrollable">
@@ -618,22 +630,25 @@ export const CalendarView = () => {
       </div>
       
       {/* Event Details Modal */}
-      {selectedEvent && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold">{selectedEvent.title}</h3>
-              <button
+      <Dialog open={!!selectedEvent} onOpenChange={(open) => !open && setSelectedEvent(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center justify-between">
+              {selectedEvent?.title}
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={() => setSelectedEvent(null)}
-                className="text-gray-500 hover:text-gray-700"
               >
-                ×
-              </button>
-            </div>
-            
-            <div className="space-y-3">
+                <X className="w-4 h-4" />
+              </Button>
+            </DialogTitle>
+          </DialogHeader>
+          
+          {selectedEvent && (
+            <div className="space-y-4">
               <div>
-                <div className="text-sm text-gray-600">Time</div>
+                <div className="text-sm text-gray-600 mb-1">Time</div>
                 <div className="font-medium">
                   {format(selectedEvent.start, 'MMM d, h:mm a')} - 
                   {format(selectedEvent.end, 'h:mm a')}
@@ -642,44 +657,45 @@ export const CalendarView = () => {
               
               {selectedEvent.description && (
                 <div>
-                  <div className="text-sm text-gray-600">Description</div>
+                  <div className="text-sm text-gray-600 mb-1">Description</div>
                   <div className="font-medium">{selectedEvent.description}</div>
                 </div>
               )}
               
               <div>
-                <div className="text-sm text-gray-600">Type</div>
-                <div className="font-medium capitalize">{selectedEvent.type}</div>
+                <div className="text-sm text-gray-600 mb-1">Type</div>
+                <Badge variant="outline" className="capitalize">{selectedEvent.type}</Badge>
               </div>
               
               {selectedEvent.taskId && (
                 <div className="flex space-x-2">
-                  <button
+                  <Button
+                    variant="outline"
+                    className="flex-1"
                     onClick={() => {
                       if (selectedEvent.taskId) {
                         unscheduleTask(selectedEvent.taskId);
                         setSelectedEvent(null);
                       }
                     }}
-                    className="flex-1 bg-gray-100 text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-200"
                   >
                     Unschedule
-                  </button>
-                  <button
+                  </Button>
+                  <Button
+                    className="flex-1"
                     onClick={() => {
                       // Navigate to task in TaskManager
                       setSelectedEvent(null);
                     }}
-                    className="flex-1 bg-blue-600 text-white px-3 py-2 rounded-lg hover:bg-blue-700"
                   >
                     Edit Task
-                  </button>
+                  </Button>
                 </div>
               )}
             </div>
-          </div>
-        </div>
-      )}
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

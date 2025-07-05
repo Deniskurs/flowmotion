@@ -7,12 +7,12 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { TaskManager } from '@/features/tasks/TaskManager';
+import { ModernTaskManager } from '@/features/tasks/ModernTaskManager';
 import { CalendarView } from '@/features/calendar/CalendarView';
-import { Dashboard } from '@/features/dashboard/Dashboard';
+import { ModernDashboard } from '@/features/dashboard/ModernDashboard';
 import { GoogleSignIn } from '@/features/auth/GoogleSignIn';
 import { CalendarSync } from '@/features/calendar-sync/CalendarSync';
-import { CleanVoiceAssistant } from '@/features/ai/CleanVoiceAssistant';
+import { ChatWindow } from '@/components/Chat/ChatWindow';
 import { useAuthStore } from '@/features/auth/authStore';
 import { useTaskStore } from '@/features/tasks/taskStore';
 import { 
@@ -56,17 +56,17 @@ export default function Home() {
   const renderActiveView = () => {
     switch (activeView) {
       case 'voice':
-        return <CleanVoiceAssistant onNavigate={(view) => setActiveView(view as ActiveView)} />;
+        return <ChatWindow mode="scheduling" className="h-full" />;
       case 'tasks':
-        return <TaskManager />;
+        return <ModernTaskManager />;
       case 'calendar':
         return <CalendarView />;
       case 'dashboard':
-        return <Dashboard />;
+        return <ModernDashboard />;
       case 'settings':
         return <SettingsView />;
       default:
-        return <CleanVoiceAssistant onNavigate={(view) => setActiveView(view as ActiveView)} />;
+        return <ChatWindow mode="scheduling" className="h-full" />;
     }
   };
 

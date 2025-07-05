@@ -8,19 +8,19 @@
 import { Task, TaskFormData } from './TaskTypes';
 import { format, isToday, isTomorrow, isYesterday, differenceInDays } from 'date-fns';
 
-export const validateTaskForm = (data: TaskFormData): string[] => {
-  const errors: string[] = [];
+export const validateTaskForm = (data: TaskFormData): Record<string, string> => {
+  const errors: Record<string, string> = {};
   
   if (!data.title.trim()) {
-    errors.push('Title is required');
+    errors.title = 'Title is required';
   }
   
   if (data.estimatedDuration <= 0) {
-    errors.push('Estimated duration must be greater than 0');
+    errors.estimatedDuration = 'Estimated duration must be greater than 0';
   }
   
   if (data.deadline && data.deadline < new Date()) {
-    errors.push('Deadline cannot be in the past');
+    errors.deadline = 'Deadline cannot be in the past';
   }
   
   return errors;

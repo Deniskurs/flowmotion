@@ -66,8 +66,11 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Skip API requests (let them fail naturally when offline)
-  if (event.request.url.includes('/api/')) {
+  // Skip API requests and speech recognition services (let them fail naturally when offline)
+  if (event.request.url.includes('/api/') || 
+      event.request.url.includes('speech.googleapis.com') ||
+      event.request.url.includes('www.google.com/speech-api') ||
+      event.request.url.includes('speechapi.google.com')) {
     return;
   }
 

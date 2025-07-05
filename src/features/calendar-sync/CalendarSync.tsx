@@ -29,6 +29,12 @@ import {
   ChevronDown,
   ChevronRight
 } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
 
 interface CalendarSyncProps {
   variant?: 'full' | 'compact' | 'status-only';
@@ -214,36 +220,38 @@ export const CalendarSync = ({
   // Compact variant
   if (variant === 'compact') {
     return (
-      <div className="bg-white rounded-lg border p-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <Calendar className="w-5 h-5 text-blue-600" />
-            <div>
-              <h4 className="font-medium text-gray-900">Google Calendar</h4>
-              <p className="text-sm text-gray-600">
-                {syncState.isConnected ? 'Connected' : 'Not connected'}
-              </p>
+      <Card>
+        <CardContent className="p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <Calendar className="w-5 h-5 text-blue-600" />
+              <div>
+                <h4 className="font-medium text-gray-900">Google Calendar</h4>
+                <p className="text-sm text-gray-600">
+                  {syncState.isConnected ? 'Connected' : 'Not connected'}
+                </p>
+              </div>
             </div>
+            
+            {syncState.isConnected && (
+              <Button
+                onClick={performSync}
+                disabled={isSyncing}
+                className="gap-2"
+              >
+                <RotateCcw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
+                <span>{isSyncing ? 'Syncing...' : 'Sync'}</span>
+              </Button>
+            )}
           </div>
-          
-          {syncState.isConnected && (
-            <button
-              onClick={performSync}
-              disabled={isSyncing}
-              className="flex items-center space-x-2 bg-blue-600 text-white px-3 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50"
-            >
-              <RotateCcw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
-              <span>{isSyncing ? 'Syncing...' : 'Sync'}</span>
-            </button>
-          )}
-        </div>
 
-        {syncState.error && (
-          <div className="mt-3 p-2 bg-red-50 border border-red-200 rounded text-sm text-red-600">
-            {syncState.error}
-          </div>
-        )}
-      </div>
+          {syncState.error && (
+            <div className="mt-3 p-2 bg-red-50 border border-red-200 rounded text-sm text-red-600">
+              {syncState.error}
+            </div>
+          )}
+        </CardContent>
+      </Card>
     );
   }
 
@@ -251,179 +259,197 @@ export const CalendarSync = ({
   return (
     <div className="space-y-6">
       {/* Connection Status */}
-      <div className="bg-white rounded-lg border p-6">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center space-x-3">
-            <Calendar className="w-6 h-6 text-blue-600" />
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900">Google Calendar Sync</h3>
-              <p className="text-gray-600">
-                Sync your tasks with Google Calendar for seamless scheduling
-              </p>
-            </div>
-          </div>
-          
-          <div className={`px-3 py-1 rounded-full text-sm ${
-            syncState.isConnected 
-              ? 'bg-green-100 text-green-700' 
-              : 'bg-gray-100 text-gray-700'
-          }`}>
-            {syncState.isConnected ? 'Connected' : 'Not connected'}
-          </div>
-        </div>
-
-        {syncState.isConnected && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-            {/* Calendar Selection */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Default Calendar
-              </label>
-              <select
-                value={syncState.selectedCalendarId || ''}
-                onChange={(e) => setSyncState(prev => ({ 
-                  ...prev, 
-                  selectedCalendarId: e.target.value 
-                }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                {syncState.calendars.map(calendar => (
-                  <option key={calendar.id} value={calendar.id}>
-                    {calendar.summary} {calendar.primary ? '(Primary)' : ''}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Last Sync Time */}
-            <div className="flex items-center space-x-2">
-              <Clock className="w-4 h-4 text-gray-500" />
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <Calendar className="w-6 h-6 text-blue-600" />
               <div>
-                <div className="text-sm font-medium text-gray-700">Last Sync</div>
-                <div className="text-sm text-gray-600">
-                  {syncState.lastSyncTime 
-                    ? syncState.lastSyncTime.toLocaleString()
-                    : 'Never'
-                  }
+                <CardTitle className="text-lg">Google Calendar Sync</CardTitle>
+                <p className="text-gray-600">
+                  Sync your tasks with Google Calendar for seamless scheduling
+                </p>
+              </div>
+            </div>
+            
+            <Badge variant={syncState.isConnected ? "default" : "secondary"} className={`${
+              syncState.isConnected 
+                ? 'bg-green-100 text-green-700' 
+                : 'bg-gray-100 text-gray-700'
+            }`}>
+              {syncState.isConnected ? 'Connected' : 'Not connected'}
+            </Badge>
+          </div>
+        </CardHeader>
+
+        <CardContent>
+          {syncState.isConnected && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              {/* Calendar Selection */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Default Calendar
+                </label>
+                <Select
+                  value={syncState.selectedCalendarId || ''}
+                  onValueChange={(value) => setSyncState(prev => ({ 
+                    ...prev, 
+                    selectedCalendarId: value 
+                  }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select calendar" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {syncState.calendars.map(calendar => (
+                      <SelectItem key={calendar.id} value={calendar.id}>
+                        {calendar.summary} {calendar.primary ? '(Primary)' : ''}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Last Sync Time */}
+              <div className="flex items-center space-x-2">
+                <Clock className="w-4 h-4 text-gray-500" />
+                <div>
+                  <div className="text-sm font-medium text-gray-700">Last Sync</div>
+                  <div className="text-sm text-gray-600">
+                    {syncState.lastSyncTime 
+                      ? syncState.lastSyncTime.toLocaleString()
+                      : 'Never'
+                    }
+                  </div>
                 </div>
               </div>
             </div>
+          )}
+
+          {/* Sync Button */}
+          <div className="flex items-center space-x-3">
+            <Button
+              onClick={performSync}
+              disabled={!syncState.isConnected || isSyncing}
+              className="gap-2"
+            >
+              <RotateCcw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
+              <span>{isSyncing ? 'Syncing...' : 'Sync Now'}</span>
+            </Button>
+            
+            <Button
+              variant="outline"
+              onClick={checkConnectionStatus}
+              disabled={syncState.isLoading}
+              className="gap-2"
+            >
+              <RefreshCw className={`w-4 h-4 ${syncState.isLoading ? 'animate-spin' : ''}`} />
+              <span>Check Status</span>
+            </Button>
           </div>
-        )}
 
-        {/* Sync Button */}
-        <div className="flex items-center space-x-3">
-          <button
-            onClick={performSync}
-            disabled={!syncState.isConnected || isSyncing}
-            className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50"
-          >
-            <RotateCcw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
-            <span>{isSyncing ? 'Syncing...' : 'Sync Now'}</span>
-          </button>
-          
-          <button
-            onClick={checkConnectionStatus}
-            disabled={syncState.isLoading}
-            className="flex items-center space-x-2 border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 disabled:opacity-50"
-          >
-            <RefreshCw className={`w-4 h-4 ${syncState.isLoading ? 'animate-spin' : ''}`} />
-            <span>Check Status</span>
-          </button>
-        </div>
-
-        {syncState.error && (
-          <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-600">
-            <div className="flex items-center space-x-2">
-              <AlertCircle className="w-4 h-4" />
-              <span>{syncState.error}</span>
+          {syncState.error && (
+            <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-600">
+              <div className="flex items-center space-x-2">
+                <AlertCircle className="w-4 h-4" />
+                <span>{syncState.error}</span>
+              </div>
             </div>
-          </div>
-        )}
-      </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Sync Settings */}
       {syncState.isConnected && (
-        <div className="bg-white rounded-lg border p-6">
-          <button
-            onClick={() => setIsExpanded(!isExpanded)}
-            className="flex items-center justify-between w-full"
-          >
-            <div className="flex items-center space-x-2">
-              <Settings className="w-5 h-5 text-gray-600" />
-              <h4 className="font-medium text-gray-900">Sync Settings</h4>
-            </div>
-            {isExpanded ? (
-              <ChevronDown className="w-5 h-5 text-gray-600" />
-            ) : (
-              <ChevronRight className="w-5 h-5 text-gray-600" />
-            )}
-          </button>
+        <Card>
+          <CardHeader>
+            <Button
+              variant="ghost"
+              onClick={() => setIsExpanded(!isExpanded)}
+              className="flex items-center justify-between w-full p-0 h-auto"
+            >
+              <div className="flex items-center space-x-2">
+                <Settings className="w-5 h-5 text-gray-600" />
+                <CardTitle className="text-base">Sync Settings</CardTitle>
+              </div>
+              {isExpanded ? (
+                <ChevronDown className="w-5 h-5 text-gray-600" />
+              ) : (
+                <ChevronRight className="w-5 h-5 text-gray-600" />
+              )}
+            </Button>
+          </CardHeader>
 
           {isExpanded && (
-            <div className="mt-4 space-y-4 border-t pt-4">
+            <CardContent className="space-y-4 border-t pt-4">
               {/* Sync Direction */}
-              <div>
-                <label className="flex items-center space-x-3">
-                  <input
-                    type="checkbox"
-                    checked={syncState.syncSettings.syncTasksToCalendar}
-                    onChange={(e) => updateSyncSettings({ 
-                      syncTasksToCalendar: e.target.checked 
-                    })}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                  />
-                  <span className="text-sm text-gray-900">
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="sync-tasks-to-calendar"
+                  checked={syncState.syncSettings.syncTasksToCalendar}
+                  onCheckedChange={(checked) => updateSyncSettings({ 
+                    syncTasksToCalendar: !!checked 
+                  })}
+                />
+                <div className="grid gap-1.5 leading-none">
+                  <label
+                    htmlFor="sync-tasks-to-calendar"
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
                     Sync FlowMotion tasks to Google Calendar
-                  </span>
-                </label>
-                <p className="text-xs text-gray-600 ml-7">
-                  Create calendar events when you schedule tasks
-                </p>
+                  </label>
+                  <p className="text-xs text-gray-600">
+                    Create calendar events when you schedule tasks
+                  </p>
+                </div>
               </div>
 
-              <div>
-                <label className="flex items-center space-x-3">
-                  <input
-                    type="checkbox"
-                    checked={syncState.syncSettings.syncCalendarToTasks}
-                    onChange={(e) => updateSyncSettings({ 
-                      syncCalendarToTasks: e.target.checked 
-                    })}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                  />
-                  <span className="text-sm text-gray-900">
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="sync-calendar-to-tasks"
+                  checked={syncState.syncSettings.syncCalendarToTasks}
+                  onCheckedChange={(checked) => updateSyncSettings({ 
+                    syncCalendarToTasks: !!checked 
+                  })}
+                />
+                <div className="grid gap-1.5 leading-none">
+                  <label
+                    htmlFor="sync-calendar-to-tasks"
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
                     Block time for Google Calendar events
-                  </span>
-                </label>
-                <p className="text-xs text-gray-600 ml-7">
-                  Show calendar events as blocked time in FlowMotion
-                </p>
+                  </label>
+                  <p className="text-xs text-gray-600">
+                    Show calendar events as blocked time in FlowMotion
+                  </p>
+                </div>
               </div>
 
               {/* Other Settings */}
-              <div>
-                <label className="flex items-center space-x-3">
-                  <input
-                    type="checkbox"
-                    checked={syncState.syncSettings.includeCompletedTasks}
-                    onChange={(e) => updateSyncSettings({ 
-                      includeCompletedTasks: e.target.checked 
-                    })}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                  />
-                  <span className="text-sm text-gray-900">
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="include-completed-tasks"
+                  checked={syncState.syncSettings.includeCompletedTasks}
+                  onCheckedChange={(checked) => updateSyncSettings({ 
+                    includeCompletedTasks: !!checked 
+                  })}
+                />
+                <div className="grid gap-1.5 leading-none">
+                  <label
+                    htmlFor="include-completed-tasks"
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
                     Keep completed tasks in calendar
-                  </span>
-                </label>
+                  </label>
+                </div>
               </div>
 
               {/* Default Duration */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
                   Default task duration (minutes)
                 </label>
-                <input
+                <Input
                   type="number"
                   min="15"
                   max="480"
@@ -432,12 +458,12 @@ export const CalendarSync = ({
                   onChange={(e) => updateSyncSettings({ 
                     defaultTaskDuration: parseInt(e.target.value) || 60 
                   })}
-                  className="w-24 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-24"
                 />
               </div>
-            </div>
+            </CardContent>
           )}
-        </div>
+        </Card>
       )}
     </div>
   );

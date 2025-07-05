@@ -57,6 +57,7 @@ export default function RootLayout({
         <meta name="application-name" content="FlowMotion" />
         <meta name="msapplication-TileColor" content="#2563eb" />
         <meta name="theme-color" content="#2563eb" />
+        <meta httpEquiv="Permissions-Policy" content="microphone=(self), camera=(), geolocation=()" />
         <link rel="apple-touch-icon" href="/icons/icon-192x192.svg" />
         <link rel="shortcut icon" href="/favicon.ico" />
       </head>
