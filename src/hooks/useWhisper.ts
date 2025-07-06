@@ -119,6 +119,7 @@ export const useWhisper = (options: UseWhisperOptions = {}): UseWhisperReturn =>
 
   const processAudioWithWhisper = async (audioBlob: Blob) => {
     try {
+      console.log('🎙️ Processing audio with Whisper, blob size:', audioBlob.size);
       setState(prev => ({ ...prev, isRecording: false, isProcessing: true }));
 
       // Convert to the format Whisper expects
@@ -127,6 +128,7 @@ export const useWhisper = (options: UseWhisperOptions = {}): UseWhisperReturn =>
       formData.append('model', 'whisper-1');
       formData.append('language', 'en');
 
+      console.log('📡 Sending to Whisper API...');
       const response = await fetch('/api/whisper', {
         method: 'POST',
         body: formData,
@@ -138,6 +140,7 @@ export const useWhisper = (options: UseWhisperOptions = {}): UseWhisperReturn =>
 
       const result = await response.json();
       const transcript = result.text || '';
+      console.log('📝 Whisper transcript:', transcript);
 
       setState(prev => ({ 
         ...prev, 
@@ -147,6 +150,7 @@ export const useWhisper = (options: UseWhisperOptions = {}): UseWhisperReturn =>
       }));
 
       if (transcript) {
+        console.log('✅ Calling onTranscript callback with:', transcript);
         onTranscript?.(transcript);
       }
 

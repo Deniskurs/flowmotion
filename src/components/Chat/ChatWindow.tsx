@@ -6,11 +6,10 @@
 'use client';
 
 import { useChat } from 'ai/react';
-import { useWhisper } from '@/hooks/useWhisper';
-import { useSpeech } from '@/hooks/useSpeech';
+import { useVoiceConversation } from '@/hooks/useVoiceConversation';
 import { Button } from '@/components/ui/button';
 import { Mic, MicOff, Sparkles } from 'lucide-react';
-import { useRef, useCallback, useState } from 'react';
+import { useRef, useCallback, useState, useEffect } from 'react';
 import { ChatMessage } from './ChatMessage';
 import { ChatInput } from './ChatInput';
 import { VoiceOverlay } from './VoiceOverlay';
@@ -25,13 +24,59 @@ export function ChatWindow({ mode = 'scheduling', className }: ChatWindowProps) 
   const scrollRef = useRef<HTMLDivElement>(null);
   const [showVoiceInterface, setShowVoiceInterface] = useState(false);
   
+  // Use refs to store chat functions for voice callbacks
+  const chatFunctionsRef = useRef<{
+    setInput: ((input: string) => void) | null;
+    handleSubmit: ((e: any) => void) | null;
+  }>({ setInput: null, handleSubmit: null });
+
+  const handleVoiceTranscript = useCallback((transcript: string) => {
+    console.log('📝 Setting input to:', transcript);
+    if (chatFunctionsRef.current.setInput) {
+      chatFunctionsRef.current.setInput(transcript);
+    }
+  }, []);
+
+  const handleVoiceSendMessage = useCallback((message: string) => {
+    console.log('📨 Voice message to send:', message);
+    if (message.trim() && chatFunctionsRef.current.setInput && chatFunctionsRef.current.handleSubmit) {
+      chatFunctionsRef.current.setInput(message);
+      // Create a synthetic form event to trigger the chat submission
+      const formEvent = {
+        preventDefault: () => {},
+        target: { value: message }
+      } as any;
+      
+      // Trigger the chat submission directly
+      setTimeout(() => {
+        console.log('🚀 Submitting voice message to chat API');
+        if (chatFunctionsRef.current.handleSubmit) {
+          chatFunctionsRef.current.handleSubmit(formEvent);
+        }
+      }, 100);
+    }
+  }, []);
+
+  const voiceConversation = useVoiceConversation({
+    onTranscript: handleVoiceTranscript,
+    onSendMessage: handleVoiceSendMessage,
+    autoResumeDelay: 1500,
+    speechOptions: {
+      voice: 'rachel', // Clear, natural female voice
+      model: 'eleven_turbo_v2', // Fast, high-quality model
+      stability: 0.4, // Slight variation for naturalness
+      similarity_boost: 0.7 // Higher clarity
+    }
+  });
+
   const { messages, input, handleInputChange, handleSubmit, isLoading, setInput } = useChat({
     api: '/api/chat',
     body: { mode },
     onFinish: (message) => {
-      // Auto-speak AI responses when in voice mode
-      if (showVoiceInterface && message.content) {
-        console.log('AI response received:', message.content);
+      // Auto-speak AI responses when voice conversation is active
+      console.log('💬 Chat onFinish called, voiceActive:', voiceConversation.state.isActive, 'showOverlay:', showVoiceInterface, 'message:', message.content?.substring(0, 100));
+      if (voiceConversation.state.isActive && message.content) {
+        console.log('✅ AI response received, will speak with ElevenLabs');
         
         // Extract just the conversational response, not JSON
         let textToSpeak = message.content;
@@ -45,71 +90,30 @@ export function ChatWindow({ mode = 'scheduling', className }: ChatWindowProps) 
           // Use full content if not JSON
         }
         
-        console.log('Speaking:', textToSpeak);
-        speech.speak(textToSpeak);
+        console.log('🔊 Speaking with ElevenLabs:', textToSpeak.substring(0, 50) + '...');
+        voiceConversation.handleAIResponse(textToSpeak);
+      } else {
+        console.log('❌ Not speaking because voiceActive:', voiceConversation.state.isActive);
       }
     },
   });
 
-  const handleWhisperTranscript = useCallback((transcript: string) => {
-    // In voice mode, auto-submit the transcript
-    if (showVoiceInterface && transcript.trim()) {
-      setInput(transcript);
-      // Auto-submit after a brief delay
-      setTimeout(() => {
-        const form = document.getElementById('chat-form') as HTMLFormElement;
-        if (form) {
-          form.requestSubmit();
-        }
-      }, 100);
-    } else {
-      setInput(transcript);
+  // Update chat functions ref when they're available
+  useEffect(() => {
+    chatFunctionsRef.current.setInput = setInput;
+    chatFunctionsRef.current.handleSubmit = handleSubmit;
+  }, [setInput, handleSubmit]);
+
+  // Auto-scroll to latest message when overlay closes or new messages arrive
+  useEffect(() => {
+    if (!showVoiceInterface && scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [setInput, showVoiceInterface]);
-
-  const handleWhisperError = useCallback((error: string) => {
-    console.error('Whisper error:', error);
-  }, []);
-
-  const whisper = useWhisper({
-    onTranscript: handleWhisperTranscript,
-    onError: handleWhisperError,
-  });
-
-  const speech = useSpeech({
-    rate: 1.0,
-    pitch: 1.0,
-    volume: 1.0,
-    onStart: () => {
-      console.log('🔊 AI started speaking');
-      // Clear the input when AI starts speaking
-      setInput('');
-      whisper.clearTranscript();
-    },
-    onEnd: () => {
-      console.log('🔊 AI finished speaking');
-      // Auto-continue listening after AI finishes speaking
-      setTimeout(() => {
-        if (showVoiceInterface && !isLoading) {
-          console.log('🎤 Resuming listening...');
-          whisper.startRecording();
-        }
-      }, 1500);
-    },
-    onError: (error) => {
-      console.error('🔊 Speech error:', error);
-      // Continue conversation even if speech fails
-      setTimeout(() => {
-        if (showVoiceInterface && !isLoading) {
-          whisper.startRecording();
-        }
-      }, 1000);
-    }
-  });
+  }, [showVoiceInterface, messages.length]);
 
   const handleVoiceSubmit = useCallback(() => {
-    if (whisper.state.transcript.trim()) {
-      setInput(whisper.state.transcript);
+    if (voiceConversation.state.transcript.trim()) {
+      setInput(voiceConversation.state.transcript);
       // Don't close voice interface - keep conversation flowing
       // Trigger form submission
       setTimeout(() => {
@@ -119,29 +123,28 @@ export function ChatWindow({ mode = 'scheduling', className }: ChatWindowProps) 
         }
       }, 100);
     }
-  }, [whisper.state.transcript, setInput]);
+  }, [voiceConversation.state.transcript, setInput]);
 
   const handleVoiceToggle = useCallback(async () => {
     if (showVoiceInterface) {
-      // If in voice mode, toggle recording
-      if (whisper.state.isRecording) {
-        whisper.stopRecording();
-      } else if (!speech.state.isSpeaking && !isLoading) {
-        await whisper.startRecording();
-      }
+      // Close overlay and stop voice conversation
+      console.log('🚪 Closing voice overlay and stopping conversation');
+      setShowVoiceInterface(false);
+      voiceConversation.stopConversation();
     } else {
       // Enter voice mode and start recording
+      console.log('🎤 Opening voice overlay and starting conversation');
       setShowVoiceInterface(true);
-      setTimeout(async () => {
-        await whisper.startRecording();
+      setTimeout(() => {
+        voiceConversation.startConversation();
       }, 300); // Small delay for UI animation
     }
-  }, [showVoiceInterface, whisper, speech.state.isSpeaking, isLoading]);
+  }, [showVoiceInterface, voiceConversation]);
 
   const handleTextMode = () => {
+    console.log('💬 Switching to text mode');
     setShowVoiceInterface(false);
-    whisper.stopRecording();
-    speech.stop();
+    voiceConversation.stopConversation();
   };
 
   return (
@@ -192,13 +195,13 @@ export function ChatWindow({ mode = 'scheduling', className }: ChatWindowProps) 
               onClick={handleVoiceToggle}
               className={`
                 w-10 h-10 rounded-full border transition-all duration-300
-                ${whisper.state.isRecording || showVoiceInterface
+                ${voiceConversation.state.isRecording || showVoiceInterface
                   ? 'bg-black text-white border-black shadow-lg shadow-black/20' 
                   : 'bg-white/50 text-black/70 border-black/10 hover:bg-black/5 hover:border-black/20'
                 }
               `}
             >
-              {whisper.state.isRecording ? (
+              {voiceConversation.state.isRecording ? (
                 <MicOff className="w-4 h-4" />
               ) : (
                 <Mic className="w-4 h-4" />
@@ -295,7 +298,7 @@ export function ChatWindow({ mode = 'scheduling', className }: ChatWindowProps) 
                       description: 'Effortless productivity',
                       delay: 0.3
                     }
-                  ].map((feature, index) => (
+                  ].map((feature) => (
                     <motion.div
                       key={feature.title}
                       initial={{ opacity: 0, y: 20 }}
@@ -379,7 +382,7 @@ export function ChatWindow({ mode = 'scheduling', className }: ChatWindowProps) 
 
       {/* Voice Status Indicators */}
       <AnimatePresence>
-        {whisper.state.transcript && !showVoiceInterface && (
+        {voiceConversation.state.transcript && !showVoiceInterface && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -388,7 +391,7 @@ export function ChatWindow({ mode = 'scheduling', className }: ChatWindowProps) 
           >
             <div className="flex items-center justify-between max-w-4xl mx-auto">
               <p className="text-sm text-black/60 font-light">
-                Voice: {whisper.state.transcript}
+                Voice: {voiceConversation.state.transcript}
               </p>
               <Button
                 size="sm"
@@ -402,7 +405,7 @@ export function ChatWindow({ mode = 'scheduling', className }: ChatWindowProps) 
           </motion.div>
         )}
 
-        {whisper.state.isProcessing && !showVoiceInterface && (
+        {voiceConversation.state.isProcessing && !showVoiceInterface && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -417,7 +420,7 @@ export function ChatWindow({ mode = 'scheduling', className }: ChatWindowProps) 
           </motion.div>
         )}
 
-        {whisper.state.error && !showVoiceInterface && (
+        {voiceConversation.state.error && !showVoiceInterface && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -426,7 +429,7 @@ export function ChatWindow({ mode = 'scheduling', className }: ChatWindowProps) 
           >
             <div className="max-w-4xl mx-auto">
               <p className="text-sm text-red-600 font-light">
-                {whisper.state.error}
+                {voiceConversation.state.error}
               </p>
             </div>
           </motion.div>
@@ -440,11 +443,11 @@ export function ChatWindow({ mode = 'scheduling', className }: ChatWindowProps) 
         handleSubmit={handleSubmit}
         isLoading={isLoading}
         voiceState={{
-          isListening: whisper.state.isRecording,
-          transcript: whisper.state.transcript,
-          error: whisper.state.error,
+          isListening: voiceConversation.state.isRecording,
+          transcript: voiceConversation.state.transcript,
+          error: voiceConversation.state.error,
           confidence: 1,
-          isSpeaking: false,
+          isSpeaking: voiceConversation.state.isSpeaking,
           isSupported: true
         }}
         onVoiceToggle={handleVoiceToggle}
@@ -453,18 +456,18 @@ export function ChatWindow({ mode = 'scheduling', className }: ChatWindowProps) 
       {/* Voice Overlay */}
       <VoiceOverlay
         isOpen={showVoiceInterface}
-        isRecording={whisper.state.isRecording}
-        isProcessing={whisper.state.isProcessing || isLoading}
-        isSpeaking={speech.state.isSpeaking}
-        transcript={whisper.state.transcript}
-        aiResponse={messages.length > 0 && messages[messages.length - 1]?.role === 'assistant' ? messages[messages.length - 1]?.content || '' : ''}
-        error={whisper.state.error || speech.state.error}
+        isRecording={voiceConversation.state.isRecording}
+        isProcessing={voiceConversation.state.isProcessing || isLoading}
+        isSpeaking={voiceConversation.state.isSpeaking}
+        transcript={voiceConversation.state.transcript}
+        aiResponse={voiceConversation.state.aiResponse}
+        error={voiceConversation.state.error}
         onClose={handleTextMode}
         onToggleRecording={() => {
-          if (whisper.state.isRecording) {
-            whisper.stopRecording();
-          } else if (!speech.state.isSpeaking && !isLoading) {
-            whisper.startRecording();
+          if (voiceConversation.state.isRecording) {
+            voiceConversation.stopRecording();
+          } else if (!voiceConversation.state.isSpeaking && !isLoading) {
+            voiceConversation.startConversation();
           }
         }}
         onSend={handleVoiceSubmit}

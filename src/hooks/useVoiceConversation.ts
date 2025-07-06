@@ -20,12 +20,19 @@ export interface UseVoiceConversationOptions {
   onSendMessage?: (message: string) => void;
   onAIResponse?: (response: string) => void;
   autoResumeDelay?: number;
+  speechOptions?: {
+    voice?: 'rachel' | 'adam' | 'domi' | 'bella' | 'antoni' | 'elli' | 'josh' | 'arnold' | 'charlotte' | 'matilda';
+    model?: 'eleven_turbo_v2' | 'eleven_monolingual_v1' | 'eleven_multilingual_v2';
+    stability?: number;
+    similarity_boost?: number;
+  };
 }
 
 export interface UseVoiceConversationReturn {
   state: VoiceConversationState;
   startConversation: () => void;
   stopConversation: () => void;
+  stopRecording: () => void;
   handleAIResponse: (response: string) => void;
   clearTranscript: () => void;
 }
@@ -37,7 +44,8 @@ export const useVoiceConversation = (
     onTranscript,
     onSendMessage,
     onAIResponse,
-    autoResumeDelay = 1000
+    autoResumeDelay = 1000,
+    speechOptions = {}
   } = options;
 
   const [state, setState] = useState<VoiceConversationState>({
@@ -54,11 +62,13 @@ export const useVoiceConversation = (
   const autoResumeTimeoutRef = useRef<NodeJS.Timeout>();
 
   const handleWhisperTranscript = useCallback((transcript: string) => {
+    console.log('🎤 Voice transcript received:', transcript);
     setState(prev => ({ ...prev, transcript }));
     onTranscript?.(transcript);
     
     // Auto-send transcript after user stops speaking
     if (transcript.trim()) {
+      console.log('📤 Sending transcript to AI:', transcript);
       setTimeout(() => {
         onSendMessage?.(transcript);
         setState(prev => ({ 
@@ -117,7 +127,10 @@ export const useVoiceConversation = (
   }, []);
 
   const speech = useSpeech({
-    rate: 1.1,
+    voice: speechOptions.voice || 'rachel',
+    model: speechOptions.model || 'eleven_turbo_v2',
+    stability: speechOptions.stability || 0.5,
+    similarity_boost: speechOptions.similarity_boost || 0.5,
     onStart: handleSpeechStart,
     onEnd: handleSpeechEnd,
     onError: handleSpeechError
@@ -128,7 +141,7 @@ export const useVoiceConversation = (
     setState(prev => ({
       ...prev,
       isRecording: whisper.state.isRecording,
-      isProcessing: whisper.state.isProcessing || prev.isProcessing,
+      isProcessing: whisper.state.isProcessing,
       isSpeaking: speech.state.isSpeaking,
       error: whisper.state.error || speech.state.error,
     }));
@@ -177,6 +190,7 @@ export const useVoiceConversation = (
   }, [whisper, speech]);
 
   const handleAIResponse = useCallback((response: string) => {
+    console.log('🤖 AI response received:', response);
     setState(prev => ({ 
       ...prev, 
       aiResponse: response, 
@@ -187,6 +201,7 @@ export const useVoiceConversation = (
     onAIResponse?.(response);
     
     if (state.isActive && response.trim()) {
+      console.log('🔊 Speaking AI response:', response);
       speech.speak(response);
     }
   }, [state.isActive, speech, onAIResponse]);
@@ -196,10 +211,16 @@ export const useVoiceConversation = (
     whisper.clearTranscript();
   }, [whisper]);
 
+  const stopRecording = useCallback(() => {
+    console.log('🛑 Stopping recording only (keeping conversation active)');
+    whisper.stopRecording();
+  }, [whisper]);
+
   return {
     state,
     startConversation,
     stopConversation,
+    stopRecording,
     handleAIResponse,
     clearTranscript
   };
